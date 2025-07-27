@@ -260,50 +260,63 @@ public class ReportView extends Application {
         NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Kelas");
         yAxis.setLabel("Rata-rata Skor SAW");
-        
+
         BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
         chart.setTitle("Rata-rata Skor SAW per Kelas");
         chart.setPrefWidth(400);
         chart.setPrefHeight(300);
-        
+
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName("Rata-rata Skor");
-        
+
         ReportController.ClassComparisonReport report = reportController.generateClassComparisonReport();
         for (ReportController.ClassStatistics stats : report.getClassStatistics()) {
             series.getData().add(new XYChart.Data<>(stats.getKelas(), stats.getAvgScore()));
         }
-        
+
         chart.getData().add(series);
-        chart.setStyle("-fx-background-color: white; -fx-background-radius: 15;");
-        
+
+        chart.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-text-fill: black;");
+
+        // Atur warna label axis menjadi hitam
+        xAxis.setTickLabelFill(javafx.scene.paint.Color.BLACK);
+        yAxis.setTickLabelFill(javafx.scene.paint.Color.BLACK);        
+
+        // Atur warna judul chart dan axis
+        xAxis.setStyle("-fx-text-fill: black;");
+        yAxis.setStyle("-fx-text-fill: black;");
+       
+        chart.lookup(".chart-title").setStyle("-fx-text-fill: black;");
+
         return chart;
     }
+
     
     private PieChart createPerformanceDistributionChart() {
         PieChart chart = new PieChart();
         chart.setTitle("Distribusi Performa Santri");
         chart.setPrefWidth(400);
         chart.setPrefHeight(300);
-        
+
         ReportController.RankingReport rankingReport = reportController.generateRankingReport();
         List<Penilaian> rankings = rankingReport.getRankings();
-        
+
         int berprestasi = (int) rankings.stream().filter(p -> p.getRanking() <= 3).count();
         int baik = (int) rankings.stream().filter(p -> p.getRanking() > 3 && p.getRanking() <= 10).count();
         int perluDitingkatkan = rankings.size() - berprestasi - baik;
-        
+
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList(
             new PieChart.Data("Berprestasi", berprestasi),
             new PieChart.Data("Baik", baik),
             new PieChart.Data("Perlu Ditingkatkan", perluDitingkatkan)
         );
-        
+
         chart.setData(pieChartData);
-        chart.setStyle("-fx-background-color: white; -fx-background-radius: 15;");
-        
+        chart.setStyle("-fx-background-color: white; -fx-background-radius: 15;");        
+
         return chart;
     }
+
     
     @SuppressWarnings("unchecked")
     private VBox createClassComparisonTable() {
@@ -590,11 +603,7 @@ public class ReportView extends Application {
             new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
         
         selectedFile = fileChooser.showSaveDialog(primaryStage);
-        if (selectedFile != null) {
-            // Show progress dialog
-            Alert progressAlert = createProgressAlert("Mengekspor Laporan", "Sedang membuat file PDF...");
-            progressAlert.show();
-            
+        if (selectedFile != null) {            
             // Create background task for PDF generation
             Task<Boolean> exportTask = new Task<Boolean>() {
                 @Override
@@ -604,7 +613,6 @@ public class ReportView extends Application {
                 
                 @Override
                 protected void succeeded() {
-                    progressAlert.close();
                     if (getValue()) {
                         showSuccessAlert("Export Berhasil", 
                             "Laporan PDF berhasil dibuat!\n\nLokasi file: " + selectedFile.getAbsolutePath() + 
@@ -625,7 +633,6 @@ public class ReportView extends Application {
                 
                 @Override
                 protected void failed() {
-                    progressAlert.close();
                     showErrorAlert("Export Error", 
                         "Terjadi kesalahan saat mengekspor laporan:\n" + getException().getMessage());
                 }
@@ -635,31 +642,7 @@ public class ReportView extends Application {
             new Thread(exportTask).start();
         }
     }
-    
-    private Alert createProgressAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
         
-        // Remove default buttons and add progress indicator
-        alert.getDialogPane().getButtonTypes().clear();
-        
-        VBox content = new VBox(10);
-        content.setAlignment(Pos.CENTER);
-        
-        ProgressIndicator progressIndicator = new ProgressIndicator();
-        progressIndicator.setPrefSize(50, 50);
-        
-        Label messageLabel = new Label(message);
-        messageLabel.setStyle("-fx-font-size: 14px;");
-        
-        content.getChildren().addAll(progressIndicator, messageLabel);
-        alert.getDialogPane().setContent(content);
-        
-        return alert;
-    }
-    
     private String formatFileSize(long bytes) {
         if (bytes < 1024) return bytes + " B";
         if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);

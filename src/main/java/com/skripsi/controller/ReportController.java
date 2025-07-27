@@ -228,14 +228,18 @@ public class ReportController {
     // PDF Helper Methods
     private void addPDFHeader(Document document, String title, String timestamp) throws DocumentException {
         // Logo and Institution Name (you can add actual logo here)
-        Paragraph institution = new Paragraph("SISTEM INFORMASI SANTRI BERPRESTASI", headerFont);
+        Paragraph institution = new Paragraph("PONDOK PESANTREN DARUSSALAM", headerFont);
         institution.setAlignment(Element.ALIGN_CENTER);
         document.add(institution);
         
-        Paragraph subtitle = new Paragraph("Pesantren Modern Al-Hikmah", contentFont);
+        Paragraph subtitle = new Paragraph("JL. Bandung - Tasikmalaya KM 60", contentFont);
         subtitle.setAlignment(Element.ALIGN_CENTER);
-        subtitle.setSpacingAfter(20);
+        subtitle.setSpacingAfter(2);
         document.add(subtitle);
+        Paragraph subtitle1 = new Paragraph("Sindangsari, Kersamanah", contentFont);
+        subtitle1.setAlignment(Element.ALIGN_CENTER);
+        subtitle1.setSpacingAfter(20);
+        document.add(subtitle1);
         
         // Line separator
         document.add(new LineSeparator());
@@ -305,7 +309,7 @@ public class ReportController {
         
         PdfPTable table = new PdfPTable(6);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{8, 25, 15, 15, 15, 22});
+        table.setWidths(new float[]{10, 25, 15, 15, 15, 20});
         
         // Headers
         addTableHeader(table, "Rank");
@@ -350,7 +354,7 @@ public class ReportController {
         
         PdfPTable table = new PdfPTable(6);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{15, 18, 20, 20, 20, 17});
+        table.setWidths(new float[]{15, 18, 20, 18, 18, 20});
         
         // Headers
         addTableHeader(table, "Kelas");
@@ -538,11 +542,43 @@ public class ReportController {
     
     private void addPDFFooter(Document document) throws DocumentException {
         document.add(Chunk.NEWLINE);
+        document.add(Chunk.NEWLINE);
+
+        // Format tanggal dalam bahasa Indonesia
+        LocalDateTime now = LocalDateTime.now();
+        String[] days = {"Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"};
+        String[] months = {"Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+                          "Juli", "Agustus", "September", "Oktober", "November", "Desember"};
+
+        String dayName = days[now.getDayOfWeek().getValue() % 7];
+        String monthName = months[now.getMonthValue() - 1];
+        String formattedDate = String.format("Garut, %s %d %s %d", 
+                                           dayName, now.getDayOfMonth(), monthName, now.getYear());
+
+        // Bagian tanda tangan
+        Paragraph dateLocation = new Paragraph(formattedDate, contentFont);
+        dateLocation.setAlignment(Element.ALIGN_RIGHT);
+        dateLocation.setSpacingAfter(10);
+        document.add(dateLocation);
+
+        Paragraph mengetahui = new Paragraph("Mengetahui             ", contentFont);
+        mengetahui.setAlignment(Element.ALIGN_RIGHT);
+        mengetahui.setSpacingAfter(60); 
+        document.add(mengetahui);
+
+        // Tanda kurung untuk nama
+        Paragraph signature = new Paragraph("(                                     )", contentFont);
+        signature.setAlignment(Element.ALIGN_RIGHT);
+        signature.setSpacingAfter(20);
+        document.add(signature);
+
+        // Line separator sebelum footer
         document.add(new LineSeparator());
-        
+
+        // Footer asli
         Paragraph footer = new Paragraph(
             "Laporan ini dihasilkan secara otomatis oleh Sistem Informasi Santri Berprestasi menggunakan metode SAW (Simple Additive Weighting). " +
-            "Tanggal cetak: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
+            "Tanggal cetak: " + now.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
             smallFont
         );
         footer.setAlignment(Element.ALIGN_CENTER);

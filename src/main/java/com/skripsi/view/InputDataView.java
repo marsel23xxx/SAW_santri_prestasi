@@ -1,4 +1,4 @@
-// src/main/java/com/skripsi/view/InputDataView.java - FIXED VERSION
+// src/main/java/com/skripsi/view/InputDataView.java - UPDATED VERSION
 package com.skripsi.view;
 
 import com.skripsi.controller.InputDataController;
@@ -34,11 +34,19 @@ public class InputDataView extends Application {
     private ObservableList<Santri> santriData;
     private ObservableList<Penilaian> penilaianData;
     
-    // Form fields
-    private TextField namaField, kelasField, tahunAjaranField;
+    // Form fields - UPDATED: Changed kelasField to ComboBox
+    private TextField namaField, tahunAjaranField;
+    private ComboBox<String> kelasComboBox; // Changed from TextField to ComboBox
     private ComboBox<Santri> santriComboBox;
     private TextField nilaiRaportField, nilaiAkhlakField, nilaiEkstrakurikulerField, nilaiAbsensiField;
     private Label statusLabel;
+    
+    // Class options
+    private final ObservableList<String> kelasOptions = FXCollections.observableArrayList(
+        "X IPA 1", "X IPA 2", "X IPS 1", 
+        "XI IPA 1", "XI IPA 2", "XI IPS 1", "XI IPS 2",
+        "XII IPA 1", "XII IPA 2"
+    );
     
     public InputDataView(AuthService authService) {
         this.authService = authService;
@@ -53,9 +61,9 @@ public class InputDataView extends Application {
         setupTables();
         loadData();
         
-        Scene scene = new Scene(mainTabPane, 1200, 800); // Adjusted to match dashboard size
+        Scene scene = new Scene(mainTabPane, 1200, 800);
         primaryStage.setScene(scene);
-        primaryStage.setMaximized(true); // Start maximized like dashboard
+        primaryStage.setMaximized(true);
         primaryStage.show();
         
         startAnimation();
@@ -122,12 +130,15 @@ public class InputDataView extends Application {
         namaField.setPromptText("Masukkan nama lengkap santri");
         styleTextField(namaField);
         
-        // Kelas field
+        // UPDATED: Kelas ComboBox instead of TextField
         Label kelasLabel = new Label("Kelas:");
         kelasLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
-        kelasField = new TextField();
-        kelasField.setPromptText("Contoh: X IPA 1");
-        styleTextField(kelasField);
+        kelasComboBox = new ComboBox<>();
+        kelasComboBox.setItems(kelasOptions);
+        kelasComboBox.setPromptText("Pilih kelas santri");
+        kelasComboBox.setPrefWidth(250);
+        kelasComboBox.setPrefHeight(35);
+        styleComboBox(kelasComboBox);
         
         // Tahun ajaran field
         Label tahunLabel = new Label("Tahun Ajaran:");
@@ -139,7 +150,7 @@ public class InputDataView extends Application {
         formGrid.add(namaLabel, 0, 0);
         formGrid.add(namaField, 1, 0);
         formGrid.add(kelasLabel, 0, 1);
-        formGrid.add(kelasField, 1, 1);
+        formGrid.add(kelasComboBox, 1, 1); // Changed from kelasField to kelasComboBox
         formGrid.add(tahunLabel, 0, 2);
         formGrid.add(tahunAjaranField, 1, 2);
         
@@ -523,32 +534,33 @@ public class InputDataView extends Application {
         }
     }
     
-    // FIXED: Update ComboBox immediately after adding santri
+    // UPDATED: Modified to use ComboBox for kelas and added confirmation message
     private void handleAddSantri() {
         String nama = namaField.getText().trim();
-        String kelas = kelasField.getText().trim();
+        String kelas = kelasComboBox.getValue(); // Changed from kelasField.getText()
         String tahunAjaran = tahunAjaranField.getText().trim();
         
-        if (nama.isEmpty() || kelas.isEmpty() || tahunAjaran.isEmpty()) {
+        if (nama.isEmpty() || kelas == null || kelas.trim().isEmpty() || tahunAjaran.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Peringatan", "Mohon isi semua field!");
             return;
         }
         
-        if (inputController.addSantri(nama, kelas, tahunAjaran)) {
-            showAlert(Alert.AlertType.INFORMATION, "Berhasil", "Data santri berhasil ditambahkan!");
+        if (inputController.addSantri(nama, kelas.trim(), tahunAjaran)) {
+            // UPDATED: Show message with santri name
+            showAlert(Alert.AlertType.INFORMATION, "Berhasil", 
+                     "Data santri atas nama \"" + nama + "\" berhasil ditambahkan!");
             clearSantriForm();
             
-            // CRITICAL FIX: Reload all data including ComboBox
+            // Reload all data including ComboBox
             loadSantriData();
-            loadSantriComboBox(); // This was missing or not working properly
+            loadSantriComboBox();
             
             // Automatically switch to penilaian tab for convenience
             mainTabPane.getSelectionModel().select(1);
             
             // Find and select the newly added santri in ComboBox
-            String newSantriName = nama;
             for (Santri santri : santriComboBox.getItems()) {
-                if (santri.getNama().equals(newSantriName)) {
+                if (santri.getNama().equals(nama)) {
                     santriComboBox.setValue(santri);
                     break;
                 }
@@ -558,6 +570,7 @@ public class InputDataView extends Application {
         }
     }
     
+    // UPDATED: Modified to show message with santri name
     private void handleSavePenilaian() {
         Santri selectedSantri = santriComboBox.getValue();
         if (selectedSantri == null) {
@@ -584,7 +597,9 @@ public class InputDataView extends Application {
             double nilaiAbsensi = Double.parseDouble(absensi);
             
             if (inputController.addPenilaian(selectedSantri.getId(), nilaiRaport, nilaiAkhlak, nilaiEkstrakurikuler, nilaiAbsensi)) {
-                showStatus("✓ Penilaian berhasil disimpan!", "#48bb78");
+                // UPDATED: Show message with santri name
+                showAlert(Alert.AlertType.INFORMATION, "Berhasil", 
+                         "Data nilai santri atas nama \"" + selectedSantri.getNama() + "\" berhasil diinput!");
                 clearPenilaianForm();
                 loadPenilaianData();
             } else {
@@ -615,11 +630,12 @@ public class InputDataView extends Application {
                 nilaiEkstrakurikulerField.setText(String.valueOf(existing.getNilaiEkstrakurikuler()));
                 nilaiAbsensiField.setText(String.valueOf(existing.getNilaiAbsensi()));
             } else {
-                clearPenilaianFormFields(); // Only clear fields, not combobox
+                clearPenilaianFormFields();
             }
         }
     }
     
+    // UPDATED: Modified to use ComboBox for kelas in edit dialog
     private void editSantri(Santri santri) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Edit Data Santri");
@@ -632,7 +648,9 @@ public class InputDataView extends Application {
         grid.setPadding(new Insets(20, 150, 10, 10));
         
         TextField namaEdit = new TextField(santri.getNama());
-        TextField kelasEdit = new TextField(santri.getKelas());
+        ComboBox<String> kelasEdit = new ComboBox<>(); // Changed from TextField to ComboBox
+        kelasEdit.setItems(kelasOptions);
+        kelasEdit.setValue(santri.getKelas()); // Set current value
         TextField tahunEdit = new TextField(santri.getTahunAjaran());
         
         grid.add(new Label("Nama:"), 0, 0);
@@ -647,10 +665,17 @@ public class InputDataView extends Application {
         
         Optional<ButtonType> result = dialog.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            if (inputController.updateSantri(santri.getId(), namaEdit.getText(), kelasEdit.getText(), tahunEdit.getText())) {
-                showAlert(Alert.AlertType.INFORMATION, "Berhasil", "Data santri berhasil diupdate!");
+            String selectedKelas = kelasEdit.getValue();
+            if (selectedKelas == null || selectedKelas.trim().isEmpty()) {
+                showAlert(Alert.AlertType.WARNING, "Peringatan", "Mohon pilih kelas!");
+                return;
+            }
+            
+            if (inputController.updateSantri(santri.getId(), namaEdit.getText(), selectedKelas, tahunEdit.getText())) {
+                showAlert(Alert.AlertType.INFORMATION, "Berhasil", 
+                         "Data santri atas nama \"" + namaEdit.getText() + "\" berhasil diupdate!");
                 loadSantriData();
-                loadSantriComboBox(); // Update ComboBox after edit
+                loadSantriComboBox();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Gagal", "Gagal mengupdate data santri!");
             }
@@ -666,10 +691,11 @@ public class InputDataView extends Application {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             if (inputController.deleteSantri(santri.getId())) {
-                showAlert(Alert.AlertType.INFORMATION, "Berhasil", "Data santri berhasil dihapus!");
+                showAlert(Alert.AlertType.INFORMATION, "Berhasil", 
+                         "Data santri atas nama \"" + santri.getNama() + "\" berhasil dihapus!");
                 loadSantriData();
                 loadPenilaianData();
-                loadSantriComboBox(); // Update ComboBox after delete
+                loadSantriComboBox();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Gagal", "Gagal menghapus data santri!");
             }
@@ -706,7 +732,8 @@ public class InputDataView extends Application {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             if (inputController.deletePenilaian(penilaian.getSantriId())) {
-                showAlert(Alert.AlertType.INFORMATION, "Berhasil", "Data penilaian berhasil dihapus!");
+                showAlert(Alert.AlertType.INFORMATION, "Berhasil", 
+                         "Data penilaian santri atas nama \"" + penilaian.getNamaSantri() + "\" berhasil dihapus!");
                 loadPenilaianData();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Gagal", "Gagal menghapus data penilaian!");
@@ -714,9 +741,10 @@ public class InputDataView extends Application {
         }
     }
     
+    // UPDATED: Modified to clear ComboBox
     private void clearSantriForm() {
         namaField.clear();
-        kelasField.clear();
+        kelasComboBox.setValue(null); // Changed from kelasField.clear()
         tahunAjaranField.clear();
     }
     
@@ -764,6 +792,37 @@ public class InputDataView extends Application {
                     "-fx-background-radius: 6;" +
                     "-fx-border-width: 1;" +
                     "-fx-padding: 8;"
+                );
+            }
+        });
+    }
+    
+    // NEW: Method to style ComboBox
+    private void styleComboBox(ComboBox<String> comboBox) {
+        comboBox.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-border-color: #e2e8f0;" +
+            "-fx-border-radius: 6;" +
+            "-fx-background-radius: 6;" +
+            "-fx-border-width: 1;"
+        );
+        
+        comboBox.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                comboBox.setStyle(
+                    "-fx-background-color: white;" +
+                    "-fx-border-color: #4299e1;" +
+                    "-fx-border-radius: 6;" +
+                    "-fx-background-radius: 6;" +
+                    "-fx-border-width: 2;"
+                );
+            } else {
+                comboBox.setStyle(
+                    "-fx-background-color: white;" +
+                    "-fx-border-color: #e2e8f0;" +
+                    "-fx-border-radius: 6;" +
+                    "-fx-background-radius: 6;" +
+                    "-fx-border-width: 1;"
                 );
             }
         });
