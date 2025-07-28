@@ -98,15 +98,13 @@ public class SAWResultView extends Application {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
-        Button recalculateBtn = createHeaderButton("🔄 Hitung Ulang");
-        Button exportBtn = createHeaderButton("📊 Export");
+        Button recalculateBtn = createHeaderButton("🔄 Hitung Ulang");        
         Button backBtn = createHeaderButton("⬅ Kembali");
         
         recalculateBtn.setOnAction(e -> recalculateSAW());
-        exportBtn.setOnAction(e -> showInfo("Fitur export akan segera hadir!"));
         backBtn.setOnAction(e -> ((Stage) mainLayout.getScene().getWindow()).close());
         
-        headerBox.getChildren().addAll(headerLabel, spacer, backBtn, recalculateBtn, exportBtn);
+        headerBox.getChildren().addAll(headerLabel, spacer, backBtn, recalculateBtn);
         
         // Stats cards with dashboard styling
         statsBox = createStatsSection();

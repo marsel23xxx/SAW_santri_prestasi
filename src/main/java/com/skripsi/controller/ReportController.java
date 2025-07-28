@@ -227,36 +227,89 @@ public class ReportController {
     
     // PDF Helper Methods
     private void addPDFHeader(Document document, String title, String timestamp) throws DocumentException {
-        // Logo and Institution Name (you can add actual logo here)
-        Paragraph institution = new Paragraph("PONDOK PESANTREN DARUSSALAM", headerFont);
-        institution.setAlignment(Element.ALIGN_CENTER);
-        document.add(institution);
-        
-        Paragraph subtitle = new Paragraph("JL. Bandung - Tasikmalaya KM 60", contentFont);
-        subtitle.setAlignment(Element.ALIGN_CENTER);
-        subtitle.setSpacingAfter(2);
-        document.add(subtitle);
-        Paragraph subtitle1 = new Paragraph("Sindangsari, Kersamanah", contentFont);
-        subtitle1.setAlignment(Element.ALIGN_CENTER);
-        subtitle1.setSpacingAfter(20);
-        document.add(subtitle1);
-        
-        // Line separator
-        document.add(new LineSeparator());
-        document.add(Chunk.NEWLINE);
-        
-        // Report title
-        Paragraph reportTitle = new Paragraph(title, titleFont);
-        reportTitle.setAlignment(Element.ALIGN_CENTER);
-        reportTitle.setSpacingAfter(10);
-        document.add(reportTitle);
-        
-        // Timestamp
-        Paragraph timestampPara = new Paragraph("Tanggal Laporan: " + timestamp, smallFont);
-        timestampPara.setAlignment(Element.ALIGN_CENTER);
-        timestampPara.setSpacingAfter(20);
-        document.add(timestampPara);
+        try {
+            // Create main table with 2 columns: left for logo, right for text
+            PdfPTable headerTable = new PdfPTable(2);
+            headerTable.setWidthPercentage(100);
+            headerTable.setWidths(new float[]{30, 70}); // 30% for logo, 70% for text
+
+            // Left cell for logo
+            PdfPCell leftCell = new PdfPCell();
+            leftCell.setBorder(Rectangle.NO_BORDER);
+            leftCell.setVerticalAlignment(Element.ALIGN_TOP);
+            leftCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+
+            try {
+                // Try to load logo from resources
+                String logoPath = "./src/main/java/main/resources/icons/logo_pesantren.png"; // Adjust path as needed
+                Image logo = Image.getInstance(logoPath);
+
+                // Scale logo appropriately
+                logo.scaleToFit(80, 80); // Adjust size as needed
+                logo.setAlignment(Element.ALIGN_LEFT);
+
+                leftCell.addElement(logo);
+
+            } catch (Exception e) {
+                // If logo not found, add placeholder text
+                Paragraph logoPlaceholder = new Paragraph("LOGO", smallFont);
+                logoPlaceholder.setAlignment(Element.ALIGN_LEFT);
+                leftCell.addElement(logoPlaceholder);
+
+                // Log the error (optional)
+                System.out.println("Logo not found: " + e.getMessage());
+            }
+
+            // Right cell for institution info
+            PdfPCell rightCell = new PdfPCell();
+            rightCell.setBorder(Rectangle.NO_BORDER);
+            rightCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+            // Institution information
+            Paragraph institution = new Paragraph("PONDOK PESANTREN DARUSSALAM", headerFont);
+            institution.setAlignment(Element.ALIGN_CENTER);
+            rightCell.addElement(institution);
+
+            Paragraph subtitle = new Paragraph("JL. Bandung - Tasikmalaya KM 60", contentFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            rightCell.addElement(subtitle);
+
+            Paragraph subtitle1 = new Paragraph("Sindangsari, Kersamanah", contentFont);
+            subtitle1.setAlignment(Element.ALIGN_CENTER);
+            rightCell.addElement(subtitle1);
+
+            // Add cells to header table
+            headerTable.addCell(leftCell);
+            headerTable.addCell(rightCell);
+
+            // Add header table to document
+            document.add(headerTable);
+
+            // Add some spacing
+            document.add(new Paragraph(" ", contentFont));
+
+            // Line separator
+            document.add(new LineSeparator());
+            document.add(Chunk.NEWLINE);
+
+            // Report title
+            Paragraph reportTitle = new Paragraph(title, titleFont);
+            reportTitle.setAlignment(Element.ALIGN_CENTER);
+            reportTitle.setSpacingAfter(10);
+            document.add(reportTitle);
+
+            // Timestamp
+            Paragraph timestampPara = new Paragraph("Tanggal Laporan: " + timestamp, smallFont);
+            timestampPara.setAlignment(Element.ALIGN_CENTER);
+            timestampPara.setSpacingAfter(20);
+            document.add(timestampPara);
+
+        } catch (Exception e) {
+            // Fallback to original header if there's any error
+    //        addOriginalPDFHeader(document, title, timestamp);
+        }
     }
+
     
     private void addRankingStatistics(Document document, List<Penilaian> rankings) throws DocumentException {
         int total = rankings.size();
