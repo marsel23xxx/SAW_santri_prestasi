@@ -18,6 +18,8 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.animation.TranslateTransition;
 import javafx.animation.ParallelTransition;
 import javafx.util.Duration;
@@ -113,21 +115,49 @@ public class DashboardView extends Application {
         VBox logoSection = new VBox(10);
         logoSection.setAlignment(Pos.CENTER);
         logoSection.setPadding(new Insets(0, 0, 30, 0));
-        
-        Label logo = new Label("🏫");
-        logo.setFont(Font.font("Arial", 40));
-        
-        Label title = new Label("SAW Santri");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        title.setTextFill(Color.WHITE);
-        
-        Label subtitle = new Label("Sistem Penilaian");
-        subtitle.setFont(Font.font("Arial", 14));
-        subtitle.setTextFill(Color.web("#e2e8f0"));
-        
-        logoSection.getChildren().addAll(logo, title, subtitle);
+
+        try {
+            // Ambil file dari classpath
+            Image logoImage = new Image(getClass().getResourceAsStream("/icons/logo_pesantren.png"));
+
+            ImageView logo = new ImageView(logoImage);
+
+            // Atur ukuran logo
+            logo.setFitWidth(60);
+            logo.setPreserveRatio(true);
+            logo.setSmooth(true);
+
+            Label title = new Label("SAW Santri");
+            title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+            title.setTextFill(Color.WHITE);
+
+            Label subtitle = new Label("Sistem Penilaian");
+            subtitle.setFont(Font.font("Arial", 14));
+            subtitle.setTextFill(Color.web("#e2e8f0"));
+
+            logoSection.getChildren().addAll(logo, title, subtitle);
+
+        } catch (Exception e) {
+            // Fallback jika gambar tidak ditemukan
+            Label logo = new Label("🏫");
+            logo.setFont(Font.font("Arial", 40));
+
+            Label title = new Label("SAW Santri");
+            title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+            title.setTextFill(Color.WHITE);
+
+            Label subtitle = new Label("Sistem Penilaian");
+            subtitle.setFont(Font.font("Arial", 14));
+            subtitle.setTextFill(Color.web("#e2e8f0"));
+
+            logoSection.getChildren().addAll(logo, title, subtitle);
+
+            System.out.println("Logo image not found, using default emoji: " + e.getMessage());
+        }
+
         return logoSection;
     }
+
     
     private VBox createMenuItems() {
         VBox menuItems = new VBox(5);
