@@ -43,9 +43,9 @@ public class InputDataView extends Application {
     
     // Class options
     private final ObservableList<String> kelasOptions = FXCollections.observableArrayList(
-        "X IPA 1", "X IPA 2", "X IPS 1", 
-        "XI IPA 1", "XI IPA 2", "XI IPS 1", "XI IPS 2",
-        "XII IPA 1", "XII IPA 2"
+        "1 Intensif", "3 Intensif", "1 TMI", 
+        "2 TMI", "3 TMI", "4 TMI", "5 TMI",
+        "6 TMI"
     );
     
     public InputDataView(AuthService authService) {
